@@ -6,7 +6,7 @@
     return;
   }
   window.hasRun = true;
-  
+
   function bodyCleaner(body)
   {
     {

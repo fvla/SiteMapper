@@ -22,12 +22,5 @@
 
   "background": {
     "scripts": ["popup/sitemap-action.js"]
-  },
-
-  "//content_scripts": [
-    {
-      "matches": ["*://*.mozilla.org/*"],
-      "js": ["site-mapper.js"]
-    }
-  ]
+  }
 }
