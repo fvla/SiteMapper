@@ -16,6 +16,8 @@
   {
     if (response.updated)
       document.getElementById("sitemap-content").innerHTML = response.body;
+    for (let element of document.querySelectorAll("#sitemap-content > *"))
+      element.classList.add("grid-item");
   }
 
   async function main()
@@ -30,7 +32,12 @@
         tabId = parseInt(value);
     }
     if (tabId > -1)
-      sendSitemapRequest(tabId).then(updateSitemap);
+      await sendSitemapRequest(tabId).then(updateSitemap);
+    new Masonry("#sitemap-content",
+    {
+      itemSelector: ".grid-item",
+      columnWidth: 5
+    });
   }
   main();
 })();

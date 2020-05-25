@@ -15,7 +15,9 @@ function sendSitemapRequest(tab)
 function updateSitemap(response)
 {
   if (response.updated)
-    document.getElementById("popup-content").innerHTML = response.body;
+    document.getElementById("sitemap-content").innerHTML = response.body;
+  for (let element of document.querySelectorAll("#sitemap-content > *"))
+    element.classList.add("grid-item");
 }
 
 function openTab(tab)
@@ -31,14 +33,24 @@ async function listenForClicks() {
   let tab = await browser.tabs.query({active: true, currentWindow: true}).then(tabs => tabs[0]);
   console.log(tab);
   //sendDebug(tab, "Hello, tab!");
-  sendSitemapRequest(tab).then(updateSitemap).catch(reportExecuteScriptError);
-  document.addEventListener("click", (e) =>
+  await sendSitemapRequest(tab).then(updateSitemap).catch(reportExecuteScriptError);
+  new Masonry("#sitemap-content",
+  {
+    itemSelector: ".grid-item",
+    columnWidth: 5
+  });
+  document.addEventListener("click", async (e) =>
   {
     if (e.target.id === "refresh-button")
     {
-      browser.tabs.query({active: true, currentWindow: true})
+      await browser.tabs.query({active: true, currentWindow: true})
         .then(tabs => tabs[0]).then(sendSitemapRequest).then(updateSitemap)
         .catch(reportExecuteScriptError);
+      new Masonry("#sitemap-content",
+      {
+        itemSelector: ".grid-item",
+        columnWidth: 5
+      });
     }
     else if (e.target.id === "open-button")
     {
@@ -56,7 +68,7 @@ async function listenForClicks() {
 function reportExecuteScriptError(error)
 {
   document.querySelector("#toolbar").classList.add("hidden");
-  document.querySelector("#popup-content").classList.add("hidden");
+  document.querySelector("#sitemap-content").classList.add("hidden");
   document.querySelector("#error-content").classList.remove("hidden");
   let errorP = document.createElement("p");
   errorP.innerHTML = `Error: ${error.message}`;
