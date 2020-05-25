@@ -38,7 +38,7 @@
       for (let i = elements.length - 1; i >= 0; i--)
       {
         let element = elements[i];
-        element.outerHTML = element.alt;
+        element.outerHTML = "<h2>" + element.alt + "</h2>";
       }
     }
     /* Set all details tags as open by default. */
@@ -59,32 +59,67 @@
         if (!element.textContent.replace(/\s/g, ''))
           element.parentNode.removeChild(element);
         else
-          element.style = "";
+          element.removeAttribute("style");
       }
     }
     return body;
   }
-  
+
+  /* Utility function that tells whether this element contains only a link. */
+  function isLinkContainer(element)
+  {
+    if (element.tagName === "A")
+      return true;
+    if (!element.querySelector("a"))
+      return false;
+    while (element.tagName !== "A")
+    {
+      if (element.children.length !== 1)
+        return false;
+      // let elementContent = '';
+      for (let node of element.childNodes)
+        if (node.nodeType == Node.TEXT_NODE)
+          if (node.textContent.replace(/\s/g, '') !== '')
+            return false;
+      element = element.children[0];
+    }
+    return true;
+  }
+
   function bodyExtractor(body)
   {
-    let extracted = "";
-    let elements = body.querySelectorAll("ul, ol");
+    let extracted = [];
+    let extractedInner = [];
+    let elements = body.querySelectorAll("*");
     let blacklist = Array();
     for (let i = 0; i < elements.length; i++)
     {
       let element = elements[i];
-      if (element.querySelector("a") !== null && !blacklist.includes(element))
+      if (blacklist.includes(element) || extractedInner.includes(element.parentElement.textContent))
+        continue;
+      else if (element.tagName.search(/[OU]L/) > -1) // ul, ol
       {
-        blacklist.push(...Array.from(element.querySelectorAll("*")));
-        extracted += element.outerHTML + '\n';
+        if (element.querySelector("a") !== null)
+        {
+          blacklist.push(...Array.from(element.parentElement.querySelectorAll("*")));
+          extracted.push(element.parentElement.outerHTML);
+          extractedInner.push(element.parentElement.textContent);
+        }
+      }
+      else if (element.tagName !== "LI" && isLinkContainer(element) && element.parentElement.tagName !== "LI")
+      {
+        blacklist.push(...Array.from(element.parentElement.querySelectorAll("*")));
+        extracted.push(element.parentElement.outerHTML);
+        extractedInner.push(element.parentElement.textContent);
+        element.parentElement.parentElement.removeChild(element.parentElement); // To avoid redundancy.
       }
     }
-    return extracted;
+    console.log(extractedInner);
+    return extracted.join("\n");
   }
-  
+
   browser.runtime.onMessage.addListener(function(request, sender, sendResponse)
   {
-    //console.log(sender.url);
     switch (request.command)
     {
     case "log_debug":

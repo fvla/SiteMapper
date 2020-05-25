@@ -16,6 +16,16 @@ function updateSitemap(response)
 {
   if (response.updated)
     document.getElementById("sitemap-content").innerHTML = response.body;
+  /* Prune all empty elements. */
+  {
+    let elements = document.getElementById("sitemap-content").querySelectorAll("*");
+    for (let i = elements.length - 1; i >= 0; i--)
+    {
+      let element = elements[i];
+      if (!element.textContent.replace(/\s/g, ''))
+        element.parentNode.removeChild(element);
+    }
+  }
   for (let element of document.querySelectorAll("#sitemap-content > *"))
     element.classList.add("grid-item");
 }
