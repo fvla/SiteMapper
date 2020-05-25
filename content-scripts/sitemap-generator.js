@@ -10,7 +10,7 @@
   function bodyCleaner(body)
   {
     {
-      let elements = body.querySelectorAll("style, br, script, svg, input, :not(a) img, pre, code, video, audio, iframe");
+      let elements = body.querySelectorAll("style, br, script, svg, input, :not(a) img, video, audio, iframe");
       for (let i = elements.length - 1; i >= 0; i--)
       {
         let element = elements[i];
@@ -39,6 +39,15 @@
       {
         let element = elements[i];
         element.outerHTML = element.alt;
+      }
+    }
+    /* Set all details tags as open by default. */
+    {
+      let elements = body.querySelectorAll("details");
+      for (let i = elements.length - 1; i >= 0; i--)
+      {
+        let element = elements[i];
+        element.setAttributeNode(document.createAttribute("open"));
       }
     }
     /* Prune all empty elements and remove inline styles. */
