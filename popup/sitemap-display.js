@@ -22,7 +22,7 @@ function updateSitemap(response)
     for (let i = elements.length - 1; i >= 0; i--)
     {
       let element = elements[i];
-      if (!element.textContent.replace(/\s/g, ''))
+      if (element.tagName !== "BR" && !element.textContent.replace(/\s/g, ''))
         element.parentNode.removeChild(element);
     }
   }

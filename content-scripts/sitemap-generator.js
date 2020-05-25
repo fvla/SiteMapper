@@ -10,7 +10,7 @@
   function bodyCleaner(body)
   {
     {
-      let elements = body.querySelectorAll("style, br, script, svg, input, :not(a) img, video, audio, iframe");
+      let elements = body.querySelectorAll("style, script, svg, input, :not(a) img, video, audio, iframe");
       for (let i = elements.length - 1; i >= 0; i--)
       {
         let element = elements[i];
@@ -50,13 +50,13 @@
         element.setAttributeNode(document.createAttribute("open"));
       }
     }
-    /* Prune all empty elements and remove inline styles. */
+    /* Prune all empty elements (except <br>) and remove inline styles. */
     {
       let elements = body.querySelectorAll("*");
       for (let i = elements.length - 1; i >= 0; i--)
       {
         let element = elements[i];
-        if (!element.textContent.replace(/\s/g, ''))
+        if (element.tagName !== "BR" && !element.textContent.replace(/\s/g, ''))
           element.parentNode.removeChild(element);
         else
           element.removeAttribute("style");
@@ -97,13 +97,14 @@
       let element = elements[i];
       if (blacklist.includes(element) || extractedInner.includes(element.parentElement.textContent))
         continue;
-      else if (element.tagName.search(/[OU]L/) > -1) // ul, ol
+      if (element.tagName.search(/[OU]L/) > -1) // ul, ol
       {
         if (element.querySelector("a") !== null)
         {
           blacklist.push(...Array.from(element.parentElement.querySelectorAll("*")));
           extracted.push(element.parentElement.outerHTML);
           extractedInner.push(element.parentElement.textContent);
+          element.parentElement.parentElement.removeChild(element.parentElement);
         }
       }
       else if (element.tagName !== "LI" && isLinkContainer(element) && element.parentElement.tagName !== "LI")
@@ -111,7 +112,7 @@
         blacklist.push(...Array.from(element.parentElement.querySelectorAll("*")));
         extracted.push(element.parentElement.outerHTML);
         extractedInner.push(element.parentElement.textContent);
-        element.parentElement.parentElement.removeChild(element.parentElement); // To avoid redundancy.
+        element.parentElement.parentElement.removeChild(element.parentElement);
       }
     }
     console.log(extractedInner);
