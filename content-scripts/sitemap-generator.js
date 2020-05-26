@@ -97,7 +97,12 @@
       let element = elements[i];
       if (blacklist.includes(element) || extractedInner.includes(element.parentElement.textContent))
         continue;
-      if (element.tagName.search(/[OU]L/) > -1) // ul, ol
+      if ((element.id + element.className).search(/language/i) > -1)
+      {
+        blacklist.push(...Array.from(element.querySelectorAll("*")));
+        element.parentElement.removeChild(element);
+      }
+      else if (element.tagName.search(/[OU]L/) > -1) // ul, ol
       {
         if (element.querySelector("a") !== null)
         {
