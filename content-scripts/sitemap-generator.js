@@ -10,7 +10,7 @@
   function bodyCleaner(body)
   {
     {
-      let elements = body.querySelectorAll("style, script, svg, input, :not(a) img, video, audio, iframe");
+      let elements = body.querySelectorAll("style, script, svg, input, :not(a) img, video, audio, iframe, form");
       for (let i = elements.length - 1; i >= 0; i--)
       {
         let element = elements[i];
@@ -41,13 +41,13 @@
         element.outerHTML = "<h2>" + element.alt + "</h2>";
       }
     }
-    /* Set all details tags as open by default. */
+    /* Set all details tags as closed by default. */
     {
       let elements = body.querySelectorAll("details");
       for (let i = elements.length - 1; i >= 0; i--)
       {
         let element = elements[i];
-        element.setAttributeNode(document.createAttribute("open"));
+        element.removeAttribute("open");
       }
     }
     /* Prune all empty elements (except <br>) and remove inline styles. */
@@ -62,12 +62,36 @@
           element.removeAttribute("style");
       }
     }
+    /* Wrap nested link lists in <details> and <summary> pattern. */
+    {
+      let elements = body.querySelectorAll("li");
+      for (let i = elements.length - 1; i >= 0; i--)
+      {
+        let element = elements[i];
+        if (element.children.length > 1)
+        {
+          for (let childNode of element.childNodes)
+          {
+            if (childNode.nodeType === Node.TEXT_NODE && !childNode.data.replace(/\s/g, ''))
+              continue;
+            if (isLinkContainer(childNode))
+            {
+              childNode.outerHTML = "<summary>" + childNode.outerHTML + "</summary>";
+              element.innerHTML = "<details>" + element.innerHTML + "</details>";
+            }
+            break;
+          }
+        }
+      }
+    }
     return body;
   }
 
   /* Utility function that tells whether this element contains only a link. */
   function isLinkContainer(element)
   {
+    if (element.nodeType !== Node.ELEMENT_NODE)
+      return false;
     if (element.tagName === "A")
       return true;
     if (!element.querySelector("a"))

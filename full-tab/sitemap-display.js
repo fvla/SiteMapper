@@ -60,6 +60,9 @@
         }
         if (containedByList)
           continue;
+        if (listElement.parentElement.id !== "header-content" &&
+            listElement.parentElement.parentElement.id !== "header-content")
+          listElement = listElement.parentElement;
         listElement.classList.add("header-content-list");
       }
     }
