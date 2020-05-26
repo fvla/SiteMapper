@@ -100,7 +100,7 @@
 
   function classifyElement(element)
   {
-    while (element)
+    while (element && element.tagName !== "BODY")
     {
       if ((element.id + element.className).search(/side(nav|bar)/i) > -1)
         return "sidebar";
@@ -160,6 +160,8 @@
         element.parentElement.removeChild(element);
       }
     }
+    for (let key in extracted)
+      extracted[key] = extracted[key].replace(/\s+/g, " ").trim();
     return extracted;
   }
 

@@ -1,12 +1,9 @@
-/* #sitemap-content
-{
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    align-content: flex-start;
-} */
-
 #sitemap-content > *
+{
+    clear: both;
+}
+
+#sitemap-content > * > *
 {
     float: left;
     margin: 3px;
@@ -18,7 +15,13 @@
     padding-right: 20px;
 }
 
+.header-content-list > *
+{
+    border: 1px black dotted;
+    float: left;
+}
+
 h1, h2, h3, h4, h5, h6, p
 {
-    margin: 5px 0px 5px 0px;
+    margin: 10px 0px 10px 0px;
 }

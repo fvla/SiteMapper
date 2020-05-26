@@ -25,7 +25,10 @@ function updateSitemap(response)
       let sectionHeading = document.createElement("h1");
       sectionHeading.innerHTML = part.replace(/^\w/, (c) => c.toUpperCase());
       document.getElementById("sitemap-content").appendChild(sectionHeading);
-      document.getElementById("sitemap-content").innerHTML += sitemap[part];
+      let sectionBody = document.createElement("div");
+      sectionBody.id = part + "-content";
+      sectionBody.innerHTML = sitemap[part];
+      document.getElementById("sitemap-content").appendChild(sectionBody);
     }
   }
   /* Prune all empty elements. */
@@ -38,8 +41,27 @@ function updateSitemap(response)
         element.parentNode.removeChild(element);
     }
   }
-  for (let element of document.querySelectorAll("#sitemap-content > *"))
-    element.classList.add("grid-item");
+  for (let element of document.getElementById("header-content").children)
+  {
+    let listElements = element.querySelectorAll("ul, ol");
+    for (let listElement of listElements)
+    {
+      let listElementParent = listElement.parentElement;
+      let containedByList = false;
+      while (listElementParent)
+      {
+        if (listElementParent.tagName.search(/[OU]L/) > -1)
+        {
+          containedByList = true;
+          break;
+        }
+        listElementParent = listElementParent.parentElement;
+      }
+      if (containedByList)
+        continue;
+      listElement.classList.add("header-content-list");
+    }
+  }
 }
 
 function openTab(tab)
@@ -56,11 +78,6 @@ async function listenForClicks() {
   console.log(tab);
   //sendDebug(tab, "Hello, tab!");
   await sendSitemapRequest(tab).then(updateSitemap).catch(reportExecuteScriptError);
-  new Masonry("#sitemap-content",
-  {
-    itemSelector: ".grid-item",
-    columnWidth: 5
-  });
   document.addEventListener("click", async (e) =>
   {
     if (e.target.id === "refresh-button")
@@ -68,11 +85,6 @@ async function listenForClicks() {
       await browser.tabs.query({active: true, currentWindow: true})
         .then(tabs => tabs[0]).then(sendSitemapRequest).then(updateSitemap)
         .catch(reportExecuteScriptError);
-      new Masonry("#sitemap-content",
-      {
-        itemSelector: ".grid-item",
-        columnWidth: 5
-      });
     }
     else if (e.target.id === "open-button")
     {
