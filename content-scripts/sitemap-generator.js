@@ -86,17 +86,53 @@
     return true;
   }
 
+  /* Depth = 0 if null, depth = 1 if it has no parents */
+  function getElementDepth(element)
+  {
+    let depth = 0;
+    while (element)
+    {
+      depth++;
+      element = element.parentElement;
+    }
+    return depth;
+  }
+
+  function classifyElement(element)
+  {
+    while (element)
+    {
+      if ((element.id + element.className).search(/side(nav|bar)/i) > -1)
+        return "sidebar";
+      if ((element.id + element.className).search(/breadcrumb/i) > -1)
+        return "breadcrumbs";
+      if (getElementDepth(element) <= 3 && // To decrease chances of false positive, limit depth.
+          ((element.id + element.className).search(/footer/i) > -1 || element.tagName === "FOOTER"))
+        return "footer";
+      if (!((element.id + element.className).search(/footer/i) > -1 || element.tagName === "FOOTER") &&
+          (element.id + element.className).search(/(header|banner|nav)/i) > -1)
+        return "header";
+      element = element.parentElement;
+    }
+    return "body";
+  }
+
   function bodyExtractor(body)
   {
-    let extracted = [];
+    let extracted = {header: "", sidebar: "", breadcrumbs: "", body: "", footer: ""};
     let extractedInner = [];
     let elements = body.querySelectorAll("*");
     let blacklist = Array();
     for (let i = 0; i < elements.length; i++)
     {
       let element = elements[i];
-      if (blacklist.includes(element) || extractedInner.includes(element.parentElement.textContent))
+      if (blacklist.includes(element))
         continue;
+      if (extractedInner.includes(element.parentElement.textContent))
+      {
+        blacklist.push(...Array.from(element.querySelectorAll("*")));
+        continue;
+      }
       if ((element.id + element.className).search(/language/i) > -1)
       {
         blacklist.push(...Array.from(element.querySelectorAll("*")));
@@ -106,22 +142,25 @@
       {
         if (element.querySelector("a") !== null)
         {
-          blacklist.push(...Array.from(element.parentElement.querySelectorAll("*")));
-          extracted.push(element.parentElement.outerHTML);
-          extractedInner.push(element.parentElement.textContent);
-          element.parentElement.parentElement.removeChild(element.parentElement);
+          if (getElementDepth(element) > 2)
+            element = element.parentElement;
+          blacklist.push(...Array.from(element.querySelectorAll("*")));
+          extracted[classifyElement(element)] += element.outerHTML + '\n';
+          extractedInner.push(element.textContent);
+          element.parentElement.removeChild(element);
         }
       }
       else if (element.tagName !== "LI" && isLinkContainer(element) && element.parentElement.tagName !== "LI")
       {
-        blacklist.push(...Array.from(element.parentElement.querySelectorAll("*")));
-        extracted.push(element.parentElement.outerHTML);
-        extractedInner.push(element.parentElement.textContent);
-        element.parentElement.parentElement.removeChild(element.parentElement);
+        if (getElementDepth(element) > 2)
+          element = element.parentElement;
+        blacklist.push(...Array.from(element.querySelectorAll("*")));
+        extracted[classifyElement(element)] += element.outerHTML + '\n';
+        extractedInner.push(element.textContent);
+        element.parentElement.removeChild(element);
       }
     }
-    console.log(extractedInner);
-    return extracted.join("\n");
+    return extracted;
   }
 
   browser.runtime.onMessage.addListener(function(request, sender, sendResponse)
@@ -133,9 +172,7 @@
       break;
     case "request_sitemap":
       let newBody = bodyCleaner(document.body.cloneNode(true));
-      console.log(newBody.innerHTML);
       let sitemap = bodyExtractor(newBody);
-      console.log(sitemap);
       sendResponse({updated: true, body: sitemap});
       break;
     }

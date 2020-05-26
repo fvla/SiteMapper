@@ -15,7 +15,19 @@ function sendSitemapRequest(tab)
 function updateSitemap(response)
 {
   if (response.updated)
-    document.getElementById("sitemap-content").innerHTML = response.body;
+  {
+    const sitemapParts = ["header", "sidebar", "breadcrumbs", "body", "footer"];
+    let sitemap = response.body;
+    for (let part of sitemapParts)
+    {
+      if (!sitemap[part])
+        continue;
+      let sectionHeading = document.createElement("h1");
+      sectionHeading.innerHTML = part.replace(/^\w/, (c) => c.toUpperCase());
+      document.getElementById("sitemap-content").appendChild(sectionHeading);
+      document.getElementById("sitemap-content").innerHTML += sitemap[part];
+    }
+  }
   /* Prune all empty elements. */
   {
     let elements = document.getElementById("sitemap-content").querySelectorAll("*");
